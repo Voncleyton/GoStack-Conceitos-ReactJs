@@ -1,30 +1,60 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+
+import api from './services/api';
 
 import "./styles.css";
 
 function App() {
+  const [repositories, setRepository] = useState([]);
+
+  useEffect(() => {
+    api.get('/repositories').then(response => {
+      setRepository(response.data);
+    });
+  }, []);
+
   async function handleAddRepository() {
-    // TODO
+    const response = await api.post('/repositories', {
+      "title": `NewRepository ${Date.now()}`,
+      "url": "http://github.com/voncleyton/OmniStack",
+      "techs": [
+        "Node.js",
+        "ReactJs",
+        "React Native"
+      ]
+    });
+
+    setRepository([...repositories, response.data]);
   }
 
   async function handleRemoveRepository(id) {
-    // TODO
+
+    await api.delete(`/repositories/${id}`);
+
+    const repositoryIndex = repositories.findIndex(repo => repo.id === id);
+    const newRepositories = repositories;
+
+    newRepositories.splice(repositoryIndex, 1)
+
+    setRepository([...newRepositories]);
   }
 
   return (
     <div>
-      <ul data-testid="repository-list">
-        <li>
-          Repositório 1
-
-          <button onClick={() => handleRemoveRepository(1)}>
-            Remover
-          </button>
-        </li>
-      </ul>
-
       <button onClick={handleAddRepository}>Adicionar</button>
-    </div>
+
+      <ul data-testid="repository-list">
+        {repositories.map(repository => (
+          <li key={repository.id}>
+            {repository.title}
+
+            <button onClick={() => handleRemoveRepository(repository.id)}>
+              Remover
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div >
   );
 }
 
